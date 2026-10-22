@@ -1,0 +1,29 @@
+class Solution {
+    public int minOperations(int[] nums) {
+        int n = nums.length;
+        int k = nums[0];
+        int best = Integer.MAX_VALUE;
+
+        // Case A: ascending rotation
+        boolean asc = true;
+        for (int i = 0; i < n; i++) {
+            if (nums[i] != (k + i) % n) { asc = false; break; }
+        }
+        if (asc) {
+            if (k == 0) best = 0;
+            else best = Math.min(n - k, k + 2);
+        }
+
+        // Case B: descending rotation
+        boolean desc = true;
+        for (int i = 0; i < n; i++) {
+            if (nums[i] != ((k - i) % n + n) % n) { desc = false; break; }
+        }
+        if (desc) {
+            int kp = (k + 1) % n;
+            best = Math.min(best, 1 + Math.min(kp, (n - kp) % n));
+        }
+
+        return best == Integer.MAX_VALUE ? -1 : best;
+    }
+}
