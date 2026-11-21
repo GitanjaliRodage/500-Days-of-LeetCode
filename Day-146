@@ -1,0 +1,104 @@
+import java.util.*;
+
+class Solution {
+    public int[] findSubtreeSizes(int[] parent, String s) {
+        int n = parent.length;
+
+        // Build original tree
+        List<Integer>[] children = new ArrayList[n];
+        for (int i = 0; i < n; i++) {
+            children[i] = new ArrayList<>();
+        }
+
+        for (int i = 1; i < n; i++) {
+            children[parent[i]].add(i);
+        }
+
+        int[] newParent = parent.clone();
+
+        // Nearest ancestor with each character
+        int[] lastSeen = new int[26];
+        Arrays.fill(lastSeen, -1);
+
+        // Save previous lastSeen for restoration
+        int[] previous = new int[n];
+
+        // Iterative DFS using arrays instead of Stack<int[]>
+        int[] stackNode = new int[2 * n];
+        int[] stackState = new int[2 * n];
+        int top = 0;
+
+        stackNode[top] = 0;
+        stackState[top++] = 0; // 0 = enter, 1 = exit
+
+        while (top > 0) {
+            top--;
+
+            int node = stackNode[top];
+            int state = stackState[top];
+            int ch = s.charAt(node) - 'a';
+
+            if (state == 0) {
+                // Enter node
+                previous[node] = lastSeen[ch];
+
+                if (node != 0 && lastSeen[ch] != -1) {
+                    newParent[node] = lastSeen[ch];
+                }
+
+                lastSeen[ch] = node;
+
+                // Schedule exit
+                stackNode[top] = node;
+                stackState[top++] = 1;
+
+                // Schedule children
+                for (int child : children[node]) {
+                    stackNode[top] = child;
+                    stackState[top++] = 0;
+                }
+            } else {
+                // Exit node: restore previous ancestor
+                lastSeen[ch] = previous[node];
+            }
+        }
+
+        // Build modified tree
+        List<Integer>[] newTree = new ArrayList[n];
+        for (int i = 0; i < n; i++) {
+            newTree[i] = new ArrayList<>();
+        }
+
+        for (int i = 1; i < n; i++) {
+            newTree[newParent[i]].add(i);
+        }
+
+        // Get preorder traversal of modified tree
+        int[] order = new int[n];
+        int count = 0;
+
+        int[] nodeStack = new int[n];
+        int ptr = 0;
+        nodeStack[ptr++] = 0;
+
+        while (ptr > 0) {
+            int node = nodeStack[--ptr];
+            order[count++] = node;
+
+            for (int child : newTree[node]) {
+                nodeStack[ptr++] = child;
+            }
+        }
+
+        // Calculate subtree sizes bottom-up
+        int[] answer = new int[n];
+        Arrays.fill(answer, 1);
+
+        for (int i = n - 1; i > 0; i--) {
+            int node = order[i];
+            answer[newParent[node]] += answer[node];
+        }
+
+        return answer;
+    }
+}
