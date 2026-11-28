@@ -1,0 +1,54 @@
+class Solution {
+    public int maximumSaleItems(int[][] items, int budget) {
+        int n = items.length;
+        int maxFactor = 0;
+        int minPrice = Integer.MAX_VALUE;
+
+        for (int[] item : items) {
+            maxFactor = Math.max(maxFactor, item[0]);
+            minPrice = Math.min(minPrice, item[1]);
+        }
+
+        // Count frequency of each factor
+        int[] freq = new int[maxFactor + 1];
+        for (int[] item : items) {
+            freq[item[0]]++;
+        }
+
+        // Count how many item types have factors divisible by each factor
+        for (int f = 1; f <= maxFactor; f++) {
+            for (int j = f * 2; j <= maxFactor; j += f) {
+                freq[f] += freq[j];
+            }
+        }
+
+        // Sort items by price
+        java.util.Arrays.sort(items, (a, b) -> Integer.compare(a[1], b[1]));
+
+        long remaining = budget;
+        long answer = 0;
+
+        // Buy boosted copies (each gives 2 total items)
+        for (int[] item : items) {
+            int factor = item[0];
+            int price = item[1];
+
+            if (price >= 2L * minPrice)
+                break;
+
+            int gain = freq[factor] - 1; // Exclude the same item type
+            if (gain <= 0)
+                continue;
+
+            long take = Math.min(gain, remaining / price);
+
+            answer += take * 2;
+            remaining -= take * price;
+        }
+
+        // Buy remaining normal copies using the cheapest item
+        answer += remaining / minPrice;
+
+        return (int) answer;
+    }
+}
